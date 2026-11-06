@@ -102,7 +102,26 @@ public class MainActivity extends Activity {
 
     // -------------------------------------------------------------------------------------------
 
+    /** Полный перебор NEC для китайских ТВ (Telefunken, Supra, Dexp, BBK, Hyundai, Polar...). */
+    private void addChineseNec() {
+        final String name = "Telefunken / китайские ТВ (NEC)";
+        int[] addrs = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x07, 0x08, 0x10, 0x20, 0x40, 0x80, 0x7F, 0x86, 0xFE, 0xBF};
+        int[] likely = {0x45, 0x0A, 0x12, 0x1C, 0x08, 0x40, 0x0B, 0x02, 0x1A, 0x15, 0x46, 0x4D, 0x0D, 0x18,
+                0x5D, 0x00, 0x01, 0x14, 0x10, 0x51, 0x1E, 0x0C, 0x16, 0x17, 0x47, 0x4B, 0x5C, 0x03};
+        boolean[] isLikely = new boolean[256];
+        List<Code> l = new ArrayList<>();
+        for (int a : addrs) for (int f : likely) {
+            l.add(new Code(name, "NEC1", a, 255 - a, f));
+            isLikely[f] = true;
+        }
+        for (int a : addrs) for (int f = 0; f < 256; f++) {
+            if (!isLikely[f]) l.add(new Code(name, "NEC1", a, 255 - a, f));
+        }
+        byBrand.put(name, l);
+    }
+
     private void loadCodes() {
+        addChineseNec();
         try {
             InputStream in = getAssets().open("codes.json");
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -370,6 +389,7 @@ public class MainActivity extends Activity {
         brands.addAll(byBrand.keySet());
         List<String> titles = new ArrayList<>();
         titles.add(ALL + " (" + allCodes.size() + ")");
+        // Китайский NEC-перебор не входит в «Все бренды» — он длинный
         for (String b : byBrand.keySet()) titles.add(b + " (" + byBrand.get(b).size() + ")");
         ArrayAdapter<String> ad = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, titles);
         ad.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
